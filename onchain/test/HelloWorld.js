@@ -9,4 +9,11 @@ contract("HelloWorld", (accounts) => {
         const msg = await contractInstance.read();
         assert.equal(msg, 'bananarama');
     })
+
+    it("message can be changed", async () => {
+        const contractInstance = await HelloWorld.new('bananarama');
+        await contractInstance.update('papaya papaya', {from: alice});
+        const msg = await contractInstance.read();
+        assert.equal(msg, 'papaya papaya');
+    })
 })

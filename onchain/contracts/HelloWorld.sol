@@ -19,8 +19,9 @@ contract HelloWorld {
 
     // A publicly accessible function that takes a string as a parameter
     // and updates `message`
-    function update(string memory newMessage) public {
+    function update(string memory newMessage) public returns (string memory) {
         message = newMessage;
+        return message;
     }
 
     function read() public view returns (string memory) {

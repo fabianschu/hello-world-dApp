@@ -3,27 +3,37 @@ import './App.css';
 import Web3 from 'web3';
 import contractAbi from './abi';
 
-const address = "0xa0b650b96452381b7661a9495933BF8fFd7ccdD2";
+const address = "0x2097D66Af507Ab8BDeaC55A931489a5e9df9e921";
 const {abi} = contractAbi;
 const web3 = new Web3("http://localhost:8545");
 
 const App = () => {
 
+  const [message, setMessage] = useState("");
+  const [text, setText] = useState("");
   const [helloWorldContract, setHelloWorldContract] = useState(new web3.eth.Contract(abi, address));
   
   useEffect(() => {
-    web3.eth.getAccounts().then(console.log);
-    console.log(helloWorldContract.methods.read().call());
-  }, [])
+    helloWorldContract.methods.read().call()
+      .then(msg => setMessage(msg))
+      .catch(err => console.log(err));
+  }, []);
 
   const handleClick = () => {
+    helloWorldContract.methods.update(text).call()
+      .then(msg => setMessage(msg))
+      .catch(err => console.log(err));
+  }
 
+  const handleChange = (event) => {
+    setText(event.target.value);
   }
 
   return (
     <div>
-      <p>hi</p>
-      <button onClick={handleClick}>Click me</button>
+      <p>Message: <span>{message}</span></p>
+      <input value={text} onChange={handleChange}></input>
+      <button onClick={handleClick}>New Message</button>
     </div>
   );
 }

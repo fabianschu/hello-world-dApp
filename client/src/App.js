@@ -3,9 +3,10 @@ import './App.css';
 import Web3 from 'web3';
 import contractAbi from './abi';
 
-const address = "0x2097D66Af507Ab8BDeaC55A931489a5e9df9e921";
+const address = "0x427072875ca9de9B61D9c81Da91F1695EdcaC319";
 const {abi} = contractAbi;
-const web3 = new Web3("http://localhost:8545");
+let web3js;
+web3js = new Web3(Web3.givenProvider);
 
 const App = () => {
 
@@ -13,9 +14,19 @@ const App = () => {
   const [lastPrice, setLastPrice] = useState();
   const [number, setNumber] = useState(0);
   const [text, setText] = useState("");
-  const [helloWorldContract] = useState(new web3.eth.Contract(abi, address));
+
+  const [helloWorldContract, setHelloWorldContract] = useState(new web3js.eth.Contract(abi, address));
+  const [userAccount, setUserAccount] = useState();
   
   useEffect(() => {
+    if (window.ethereum) {
+      window.web3 = new Web3(window.ethereum);
+      window.ethereum.enable();
+      web3js.eth.getAccounts().then(array => setUserAccount(array[0])).catch(err => console.log(err));
+    } else {
+      console.log('blub')
+    }
+
     helloWorldContract.methods.readMessage().call()
       .then(msg => setMessage(msg))
       .catch(err => console.log(err));
@@ -25,7 +36,7 @@ const App = () => {
   }, []);
 
   const handleClick = () => {
-    helloWorldContract.methods.update(text).send({from: "0xcA1a36ad57358F64AC5c052F7373261FAD93E352", value: web3.utils.toWei(number.toString(), "ether")})
+    helloWorldContract.methods.update(text).send({from: userAccount, value: web3js.utils.toWei(number.toString(), "ether")})
       .then(() => helloWorldContract.methods.readMessage().call())
       .then((res) => setMessage(res))
       .then(() => helloWorldContract.methods.readPrice().call())

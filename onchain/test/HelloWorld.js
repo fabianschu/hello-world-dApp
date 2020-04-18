@@ -26,8 +26,18 @@ contract("HelloWorld", (accounts) => {
 
     it("price changes after new message", async () => {
         const contractInstance = await HelloWorld.new('bananarama');
-        await contractInstance.update('papaya papaya', {value: 1800000000000000000000});
+        await contractInstance.update('papaya papaya', {value: 18000});
         const newPrice = await contractInstance.readPrice();
-        assert.equal(newPrice, 1800000000000000000000);
+        assert.equal(newPrice, 18000);
+    })
+
+    it("emits an event after message has changed", async () => {
+        const contractInstance = await HelloWorld.new('bananarama');
+        const result = await contractInstance.update('papaya papaya', {value: 18000});
+        // const newPrice = await contractInstance.readPrice();
+        const msg = result.logs[0].args[0];
+        const price = result.logs[0].args[1];
+        assert.equal(price, 18000);
+        assert.equal(msg, 'papaya papaya');
     })
 })

@@ -10,6 +10,7 @@ contract HelloWorld {
     // and creates a function that other contracts or SDKs can call to access the value
     string public message;
     uint public currentPrice;
+    event NewMessage(string message, uint currentPrice);
 
     // A special function only run during the creation of the contract
     constructor(string memory initMessage) public {
@@ -28,6 +29,7 @@ contract HelloWorld {
         );
         currentPrice = msg.value;
         message = newMessage;
+        emit NewMessage(message, currentPrice);
         return message;
     }
 

@@ -28,12 +28,10 @@ const App = () => {
     if (window.ethereum) {
       window.web3 = new Web3(window.ethereum);
       window.ethereum.enable();
-      //web3js.eth.getAccounts().then(array => setUserAccount(array[0])).catch(err => console.log(err));
+      web3js.eth.getAccounts().then(array => setUserAccount(array[0])).catch(err => console.log(err));
     } else {
       console.log('blub')
     }
-
-    console.log(helloWorldContract);
 
     helloWorldContract.methods.readMessage().call()
       .then(msg => setMessage(msg))
@@ -41,6 +39,12 @@ const App = () => {
         console.log('buha')
         console.log(err)
       });
+    
+    // web3js.eth.subscribe("logs", {address: address}, (res, err) => console.log(res))
+    //   .on("data", event => console.log(event))
+    // helloWorldContract.events.NewMessage()
+    //   .on("data", (event) => console.log(event))
+    //   .on("error", (error) => console.log(error))
     // helloWorldContract.methods.readPrice().call()
     //   .then(price => setLastPrice(price))
     //   .catch(err => console.log(err));
@@ -48,21 +52,35 @@ const App = () => {
 
 
   const update = (text, number) => {
-    console.log(text, number)
-    helloWorldContract.methods.update(text).send({from: userAccount, value: web3js.utils.toWei(number.toString(), "ether")})
-      .on('receipt', function(receipt){
-        console.log(receipt)
-      })
-      .on('confirmation', function(confirmation){
-        console.log(confirmation)
-      })
-      .then(() => helloWorldContract.methods.readMessage().call())
-      .then((res) => setMessage(res))
-      .then(() => helloWorldContract.methods.readPrice().call())
-      .then((res) => setLastPrice(res))
-      .catch(err => console.log(err));
-  }
 
+    web3js.eth.getAccounts()
+    .then(accounts => web3js.eth.getBalance(accounts[0]))
+    .then(balance => {
+        balance = parseInt(balance);
+        const price = parseInt(web3js.utils.toWei(number.toString(), "ether"))
+        console.log(price, balance);
+        if (balance >= price) {
+          console.log('yes')
+          return new Promise((resolve,reject) => {
+            helloWorldContract.methods
+              .update(text)
+              .send({from: userAccount, value: web3js.utils.toWei(number.toString(), "ether")})
+              .on("receipt", (receipt) => {
+                resolve(receipt);
+                setMessage(receipt.events.NewMessage.returnValues.message);
+                setLastPrice(receipt.events.NewMessage.returnValues.currentPrice);
+              })
+              .on("error", (error) => {
+                console.log(error)
+                reject(error);
+              })
+          })
+        } else {
+          return
+          console.log("you don' have enough ether")
+        }
+    })
+}
 
   return (
     <>

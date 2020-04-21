@@ -30,6 +30,7 @@ const View = (props) => {
     const [text, setText] = useState("");
     const [visibility, setVisibility] = useState(new Array(props.message.length).fill(true));
     const [removeTimeoutState, setRemoveTimeoutState] = useState();
+    const [hidingProcess, setHidingProcess] = useState(false);
 
     const {message, lastPrice, update} = props
 
@@ -38,39 +39,55 @@ const View = (props) => {
       }
     
     const handlePaymentChange = (event) => {
-    setNumber(event.target.value);
+        setNumber(event.target.value);
     }
 
     const handleClick = () => {
-        update(text, number);
+        update(text, number)
+            //.then(res => setHidingProcess(false))
+            .then(res => console.log(res))
+            .catch(err => console.log(err))
     }
 
-    useEffect(() => {
-        if (removeTimeoutState && visibility.includes(true)) {
-            const myTimer = setTimeout(() => {
-                let arr = [...visibility];
-                let hideIdx = Math.floor(Math.random() * arr.length);
-                while (!arr[hideIdx]) {
-                    hideIdx = Math.floor(Math.random() * arr.length);
-                }
-                arr[hideIdx] = false;
-                setVisibility(arr);
-                setRemoveTimeoutState(myTimer);
-            }, 500)
-        } else {
-            console.log('all good')
+    const hideRandomLetter = (arr) => {
+        console.log('hiding random letter')
+        let hideIdx = Math.floor(Math.random() * arr.length);
+        while (!arr[hideIdx]) {
+            hideIdx = Math.floor(Math.random() * arr.length);
         }
-    }, [removeTimeoutState])
+        arr[hideIdx] = false;
+        return arr;
+    }
 
-    const hideLetters = () => {
-        const arr = [...visibility];
-        const whiteSpaceIdx = getIndices([...message], " ");
-        const deactivatedWhiteSpaces = arr.map((el, idx) => {
-            if (whiteSpaceIdx.includes(idx)) return false  
+    const toggleVisibility = (visArr, idxArr, sym=" ") => {
+        return visArr.map((el, idx) => {
+            if (idxArr.includes(idx)) return false  
             return true
         })
+    } 
+
+    useEffect(() => {
+        let interval = null;
+        if(hidingProcess && visibility.includes(true)) {
+            console.log('yes yoa')
+            interval = setTimeout(() => {
+                const newVisibility = hideRandomLetter([...visibility]);
+                setVisibility(newVisibility);
+            }, 1000)
+        } else if (!hidingProcess && visibility.includes(true)) {
+            clearTimeout(interval);
+        }
+        return () => clearTimeout(interval);
+    }, [visibility, hidingProcess])
+
+    useEffect(() => {
+        setVisibility(new Array(props.message.length).fill(true));
+    }, [message])
+
+    const hideLetters = () => {
+        const deactivatedWhiteSpaces = toggleVisibility([...visibility], getIndices([...message], " "));
         setVisibility(deactivatedWhiteSpaces);
-        setRemoveTimeoutState(1);
+        setHidingProcess(true);
     }
 
     const showLetters = (msg) => {
@@ -99,6 +116,7 @@ const View = (props) => {
             <input type="number" value={number} onChange={handlePaymentChange}></input>
             <button onClick={(text, number) => handleClick(text, number)}>New Message</button>
             <button onClick={hideLetters}>Start Hiding</button>
+            <button onClick={() => setHidingProcess(false)}>Stop Hiding</button>
             <p>Price: <span>{lastPrice}</span></p>
         </>
     )

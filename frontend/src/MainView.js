@@ -19,11 +19,11 @@ const DarkContainer = styled.div`
     width: 100%;
     display: flex;
     /* flex-direction: column; */
-    align-items: center;
-    justify-content: center;
+    /* align-items: center;
+    justify-content: center; */
     flex-wrap: wrap;
     .message {
-        text-align: center;
+        /* text-align: center; */
     }
 `;
 
@@ -95,6 +95,30 @@ const MainView = () => {
 
     }, [onChainMsg]);
 
+    useEffect(() => {
+        // console.log('new msg: ', newOnChainMsg);
+        //check until old msg has disappeared
+        if  (newOnChainMsg && 
+            (msgVisibility && 
+            (stableIdxArr.length === msgVisibility.filter(el => el).length))) {
+            //TODO: animate
+            console.log(newOnChainMsg);
+            const showMsgSpaces = strToArr(newOnChainMsg);
+            const spacesTrue = showMsgSpaces(true);
+            const initializedVis = initializeNewMsg(spacesTrue, overlapIdx(onChainMsg, newOnChainMsg));
+            setIsHiding(false);
+            setOnChainMsg(newOnChainMsg);
+            setNewOnChainMsg();
+            //console.log(spacesTrue);
+            console.log(stableIdxArr);
+            //console.log(initializedVis);
+            setMsgVisibility(initializedVis);
+            setIsShowing(true);
+            
+        }
+
+    }, [newOnChainMsg, msgVisibility]);
+
     //animation
     useEffect(() => {
         let interval = null;
@@ -105,7 +129,7 @@ const MainView = () => {
                 interval = setTimeout(() => {
                     const newVisibility = toggleRndLetter([...msgVisibility], false, stableIdxArr);
                     setMsgVisibility(newVisibility);
-                }, 1000)
+                }, 300)
             }
         } else if ((!isHiding && msgVisibility) && msgVisibility.includes(true)) {
             clearTimeout(interval);
@@ -116,21 +140,21 @@ const MainView = () => {
     }, [isHiding, msgVisibility]);
 
     useEffect(() => {
-        console.log('true')
         let interval = null;
         if((isShowing && msgVisibility) && msgVisibility.includes(false)) {
-            console.log('true2')
+            // console.log('true2')
             if (msgVisibility.filter(el => el === true).length !== onChainMsg.length) {
-                console.log('true3');
+                // console.log('true3');
                 interval = setTimeout(() => {
                     const newVisibility = toggleRndLetter([...msgVisibility], true, stableIdxArr);
                     setMsgVisibility(newVisibility);
-                }, 1000)
+                }, 300)
             }
         } else if ((!isShowing && msgVisibility) && msgVisibility.includes(false)) {
             clearTimeout(interval);
         } else {
             setIsShowing(false);
+            setStableIdxArr([]);
         }
         return () => clearTimeout(interval);
     }, [isShowing, msgVisibility])
@@ -167,20 +191,19 @@ const MainView = () => {
                     .update(txt)
                     .send({from: userAccount, value: parseInt(web3js.utils.toWei(num, "ether"))})
                     .on("receipt", (receipt) => {
+                        console.log(receipt);
                         const newMsg = receipt.events.NewMessage.returnValues.message;
-                        setOnChainMsg(newMsg);
-                        setStableIdxArr(overlapIdx(onChainMsg, newMsg));
+                        //setOnChainMsg(newMsg);
+                        setNewOnChainMsg(newMsg);
+                        // setStableIdxArr(overlapIdx(onChainMsg, newMsg));
                         setOnChainPrice(parseInt(web3js.utils.fromWei(receipt.events.NewMessage.returnValues.currentPrice.toString(), "ether")));
-                        const showMsgSpaces = strToArr(newMsg);
-                        const spacesTrue = showMsgSpaces(true);
-                        //console.log(spacesTrue);
-                        console.log(stableIdxArr);
-                        const initializedVis = initializeNewMsg(spacesTrue, overlapIdx(onChainMsg, newMsg));
-                        //console.log(initializedVis);
-                        setMsgVisibility(initializedVis);
                     })
                     .on("error", (error) => {
-                        console.log(error);
+                        setNewOnChainMsg();
+                        setMsgVisibility(Array(onChainMsg.length).fill(true));
+                        setIsHiding(false);
+                        setIsShowing(false);
+                        setStableIdxArr([]);
                     })
             })
     }
@@ -193,12 +216,12 @@ const MainView = () => {
         setNum(event.target.value);
     }
 
-    console.log(msgVisibility);
-    console.log(onChainMsg);
-    console.log(newOnChainMsg);
-    console.log(stableIdxArr);
-    console.log('hiding: ', isHiding);
-    console.log('showing: ', isShowing);
+    // console.log(msgVisibility);
+    // console.log(onChainMsg);
+    // console.log(newOnChainMsg);
+    // console.log(stableIdxArr);
+    // console.log('hiding: ', isHiding);
+    // console.log('showing: ', isShowing);
 
     return (
         <>

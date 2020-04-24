@@ -27,8 +27,11 @@ const DarkContainer = styled.div`
     }
 `;
 
-const NeonLetter = styled.span`
+const NeonLetter = styled.div`
+    display: inline-block;
+    width: 70px;
     margin: 0;
+    text-align: center;
     font-family: Lato;
     font-size: 10rem;
     color: white;
@@ -68,19 +71,32 @@ const MainView = () => {
             console.log('You need Metamask!');
         }
 
+        // const filter = web3js.eth.subscribe('logs', {
+        //     // fromBlock: 0,
+        //     // toBlock: 'latest',
+        //     address: address
+        // }, (err, res) => {
+        //     console.log(err);
+        //     console.log(res);
+        // })
+        
+          
         //read data from blockchain
-        helloWorldContract.methods.readMessage().call()
-            .then(msg => {
-                setOnChainMsg(msg);
-                const showMsgSpaces = strToArr(msg);
-                const spacesActivated = showMsgSpaces(true);
-                setMsgVisibility(spacesActivated);
-                setIsShowing(true);
-            })
-            .catch(err => console.log("Error when reading msg from Blockchain: ", err));
         helloWorldContract.methods.readPrice().call()
-            .then(price => setOnChainPrice(parseInt(web3js.utils.fromWei(price.toString(), "ether"))))
-            .catch(err => console.log("Error when reading price from Blockchain: ", err))
+        .then(price => {
+            console.log(price);
+            
+            setOnChainPrice(parseFloat(web3js.utils.fromWei(price.toString(), "ether")))
+        })
+        .then(() => helloWorldContract.methods.readMessage().call())
+        .then(msg => {
+            setOnChainMsg(msg);
+            const showMsgSpaces = strToArr(msg);
+            const spacesActivated = showMsgSpaces(true);
+            setMsgVisibility(spacesActivated);
+            setIsShowing(true);
+        })
+        .catch(err => console.log("Error when reading from Blockchain: ", err))
     }, [])
 
     //managing the mounting animation
@@ -182,6 +198,13 @@ const MainView = () => {
                     //TODO: show some kind of message
                     return;
                 }
+                console.log(parseFloat(num) <= onChainPrice)
+                console.log(balance < parseFloat(num))
+                console.log(parseFloat(num))
+                console.log(onChainPrice)
+                console.log(balance)
+
+            
                 //TODO: initialize animation
                 //setNewOnChainMsg(txt);
                 setStableIdxArr(overlapIdx(onChainMsg, txt));
@@ -196,7 +219,7 @@ const MainView = () => {
                         //setOnChainMsg(newMsg);
                         setNewOnChainMsg(newMsg);
                         // setStableIdxArr(overlapIdx(onChainMsg, newMsg));
-                        setOnChainPrice(parseInt(web3js.utils.fromWei(receipt.events.NewMessage.returnValues.currentPrice.toString(), "ether")));
+                        setOnChainPrice(parseFloat(web3js.utils.fromWei(receipt.events.NewMessage.returnValues.currentPrice.toString(), "ether")));
                     })
                     .on("error", (error) => {
                         setNewOnChainMsg();
@@ -222,15 +245,16 @@ const MainView = () => {
     // console.log(stableIdxArr);
     // console.log('hiding: ', isHiding);
     // console.log('showing: ', isShowing);
+    console.log(onChainPrice);
 
     return (
         <>
             <DarkContainer>
-                <p className="message">
+                <div className="message">
                 {(onChainMsg && msgVisibility) && onChainMsg.split('').map((el, idx) => {
                     return <NeonLetter id={`${idx}`} key={idx} visible={msgVisibility[idx]}>{el}</NeonLetter>
                 })}
-                </p>
+                </div>
             </DarkContainer>
             <div>
                 <input type="text" value={txt} onChange={handleTxtChange}></input>
@@ -238,7 +262,7 @@ const MainView = () => {
                 <button onClick={handleSubmission}>New Message</button>
                 <button onClick={() => hide(true)}>Start Hiding</button>
                 <button onClick={() => hide(false)}>Stop Hiding</button>
-                <p>Price: <span>{onChainPrice && web3js.utils.fromWei(onChainPrice.toString(), "ether")}</span></p>
+                <p>Price: <span>{onChainPrice && web3js.utils.toWei(onChainPrice.toString(), "ether")}</span></p>
             </div>
         </>
     )
